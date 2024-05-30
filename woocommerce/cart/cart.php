@@ -128,13 +128,20 @@ do_action('woocommerce_before_cart'); ?>
                                             }
                                             ?>
                                             <div class="printareas_cart_ar">
-                                                <?php //
-                                                // if(count($custom_areas) > 0){
-                                                //     echo "<h6>Print Areas : </h6>";
-                                                //     foreach($custom_areas as $area){
-                                                //         echo "<h6><span>". $area['printtype'] ."</span> + <span>". $area['areavalue'] ."</span> + <span>". $area['printcolors'] ."</span> + <a href='". $area['artworkurl'] ."' target='_blank'>View Artwork</a></h6>";
-                                                //     }
-                                                // }
+                                                <?php
+                                                if (is_array($custom_areas) > 0) {
+                                                    $output = "<div class='size_attr_ar_cart'><h6>Print Areas : </h6>";
+                                                    foreach ($custom_areas as $area) {
+                                                        $printtype = (!empty($area['printtype'])) ? "<span>" . $area['printtype'] . "</span> + " : "";
+                                                        $printarea = (!empty($area['areavalue'])) ? "<span>" . $area['areavalue'] . "</span> + " : "";
+                                                        $printcolor = (!empty($area['printcolors'])) ? "<span>" . $area['printcolors'] . "colors </span>  " : "";
+                                                        $artwork = (!empty($area['artworkurl'])) ? " + <a href='" . $area['artworkurl'] . "' target='_blank'>View Artwork</a></h6>" : "";
+
+                                                        $output .= "<h6>" . $printtype . $printarea . $printcolor . $artwork . "</h6>";
+                                                    }
+                                                    $output .= "</div>";
+                                                    echo $output;
+                                                }
                                                 ?>
                                             </div>
 
@@ -152,7 +159,7 @@ do_action('woocommerce_before_cart'); ?>
                             <td class="product-quantity" data-title="<?php esc_attr_e('Quantity', 'woocommerce'); ?>">
                                 <?php
                                 $custom_variations = WC()->session->get('custom_variates_' . $product_id);
-                                if (count($custom_variations) > 0) {
+                                if (is_array($custom_variations) > 0) {
                                     foreach ($custom_variations as $variates) {
                                         echo "<h5 class='variations_on_cart_ar'>" . $variates['size'] . " * " . $variates['quantity'] . "</h5>";
                                     }

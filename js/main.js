@@ -88,8 +88,6 @@ jQuery(document).ready(function ($) {
 
         if (response.uploaded.length > 0) {
           $.each(response.uploaded, function (index, url) {
-            console.log(url);
-            console.log(jQuery(iid).find("img"));
             jQuery(iid).find("img").attr("src", url);
           });
           jQuery(".drag_drop_zone_wrapper").css("display", "none");
@@ -111,7 +109,6 @@ jQuery(document).ready(function ($) {
     jQuery(this).attr("id", `input_ar_${artwork}`);
     jQuery(".drag_drop_zone_wrapper").css("display", "flex");
     artwork = artwork + 1;
-    console.log("yes");
   });
 
   /****************************** drage and drop zone sections end ******************************/
@@ -171,7 +168,6 @@ jQuery(document).ready(function ($) {
       } else if (ptype == "digitalprint") {
         uodatetable("#print_ar");
       }
-      console.log(ptype);
       gettotalprice();
     } else {
       if (jQuery("#quantity_ar").length > 0) {
@@ -180,7 +176,6 @@ jQuery(document).ready(function ($) {
           .find(".price_column_ar")
           .each(function () {
             localStorage.setItem("totalquantity", quantity);
-            console.log("ptype");
             var currentElement = parseInt(jQuery(this).attr("quantity-id"));
             var nextElement = jQuery(this)
               .next(".price_column_ar")
@@ -197,12 +192,15 @@ jQuery(document).ready(function ($) {
               return;
             } else if (quantity == 0) {
               jQuery(".price_column_ar").removeClass("bg-red");
+              jQuery(".price_column_ar").removeClass("pa_ar_bg_red");
+              jQuery(".title_ar_table").removeClass("bg-red");
               gettotalprice();
               return;
             }
           });
       } else {
         jQuery("#simple_no_ar_price").find("ins bdi").addClass("bg-red");
+
         gettotalprice();
       }
     }
@@ -243,6 +241,10 @@ jQuery(document).ready(function ($) {
           jQuery(".price_column_ar").removeClass("bg-red");
           jQuery(this).addClass("bg-red");
           return;
+        } else if (quantity == 0) {
+          jQuery(".price_column_ar").removeClass("pa_ar_bg_red");
+          jQuery(".price_column_ar").removeClass("bg-red");
+          jQuery(".title_ar_table").removeClass("bg-red");
         }
       });
   }
@@ -257,7 +259,6 @@ jQuery(document).ready(function ($) {
       var value = jQuery(this).find("select.printarea").val();
       arrayval.push(value);
     });
-    console.log(arrayval);
     var quantity = parseInt(localStorage.getItem("totalquantity"));
     var firstvaluecat = jQuery(".addlogo_colum:first-child")
       .find("select.printtype")
@@ -270,10 +271,13 @@ jQuery(document).ready(function ($) {
       .val();
     if (
       arrayval.length < 4 &&
-      quantity > 0 &&
       firstvalue !== "" &&
       firstvaluecat !== null &&
-      firstvalue !== undefined && firstvaluearea !== undefined && firstvaluearea !== "" && firstvaluearea !== null
+      firstvalue !== undefined &&
+      firstvaluearea !== undefined &&
+      firstvaluearea !== "" &&
+      firstvaluearea !== null &&
+      jQuery("#pa_additional_cost_ar").length > 0
     ) {
       jQuery(".addlogo_colum:last-child").clone().appendTo(".allprintareas");
       if (firstvaluecat == "polos" || firstvaluecat == "t-shirt") {
@@ -328,9 +332,12 @@ jQuery(document).ready(function ($) {
           );
         }
       } else if (
-        (firstvalue == "" ||
+        firstvalue == "" ||
         firstvaluecat == null ||
-        firstvalue == undefined ) || (firstvaluearea == undefined || firstvaluearea == "" || firstvaluearea == null)
+        firstvalue == undefined ||
+        firstvaluearea == undefined ||
+        firstvaluearea == "" ||
+        firstvaluearea == null
       ) {
         if (jQuery(".warning_ar").length <= 0) {
           jQuery(".sizes_ar").append(
@@ -342,18 +349,19 @@ jQuery(document).ready(function ($) {
             "<h6 class='warning_ar'>Please Select the all the values in first area..</h6>"
           );
         }
-      } else {
-        if (jQuery(".warning_ar").length <= 0) {
-          jQuery(".sizes_ar").append(
-            "<h6 class='warning_ar'>Please Increase the quantity to add another print area..</h6>"
-          );
-        } else {
-          jQuery(".warning_ar").remove();
-          jQuery(".sizes_ar").append(
-            "<h6 class='warning_ar'>Please Increase the quantity to add another print area..</h6>"
-          );
-        }
       }
+      //  else {
+      //   if (jQuery(".warning_ar").length <= 0) {
+      //     jQuery(".sizes_ar").append(
+      //       "<h6 class='warning_ar'>Please Increase the quantity to add another print area..</h6>"
+      //     );
+      //   } else {
+      //     jQuery(".warning_ar").remove();
+      //     jQuery(".sizes_ar").append(
+      //       "<h6 class='warning_ar'>Please Increase the quantity to add another print area..</h6>"
+      //     );
+      //   }
+      // }
     }
   });
 
@@ -442,7 +450,6 @@ jQuery(document).ready(function ($) {
   jQuery(".allprintareas").on("change", "select.printarea", function (e) {
     e.preventDefault();
     var value = jQuery(this).val();
-    console.log(value);
     var prtype = jQuery(this)
       .closest(".addlogo_colum")
       .find("select.printtype")
@@ -549,6 +556,7 @@ jQuery(document).ready(function ($) {
 
   //   for example
   slickslideroptcl("#pr_image_vslider");
+
   /****************************** function to add vertical slider end ******************************/
   // jQuery(".allprintareas > .addlogo_colum")
   //   .find(".printtype")
@@ -576,6 +584,10 @@ jQuery(document).ready(function ($) {
   localStorage.setItem("pptype", "");
   localStorage.setItem("totalquantity", 0);
   localStorage.setItem("checked_premium", false);
+  jQuery(".sizes_ar").find("input[type='number']").val(0);
+  if (jQuery("#price_calculator_ar_ar").length <= 0) {
+    jQuery("#freeartworksetup_ar_ar").find("h2").text("0$");
+  }
 });
 
 /****************************** function visualize the free features based on quantity ******************************/
@@ -746,7 +758,6 @@ function gettotalprice() {
   var artsetupfree = jQuery("#freeartworksetup_ar_ar").find("h2").text();
   var premiumartsetup = jQuery("#premiumart_ar_ar").find("h2").text();
 
-  console.log(shiipingcost);
   shiipingcost = shiipingcost.replace(/\$/g, "");
   artsetupfree = artsetupfree.replace(/\$/g, "");
   premiumartsetup = premiumartsetup.replace(/\$/g, "");
@@ -762,12 +773,9 @@ function gettotalprice() {
           .find(".size_name > h6")
           .text();
         var sizevalue = { size: size, quantity: value };
-        console.log(sizevalue);
         sizesvar.push(sizevalue); // Now this works because sizesvar is initialized
       }
       quantity = quantity + parseInt(jQuery(this).val());
-      console.log(quantity);
-      console.log(jQuery(this).val());
     });
   pa_additional_cost_ar(quantity);
   // You can log sizesvar to see the collected data
@@ -780,7 +788,9 @@ function gettotalprice() {
     pricepp = pricepp.split(" ");
     priceperproduct = pricepp[1];
   } else {
-    var priceppa = jQuery("bdi.bg-red").text().replace(/\$/g, "");
+    var priceppa = parseFloat(
+      jQuery("bdi.bg-red").text().replace(/\$/g, "").replace(/\,/g, "")
+    );
     priceperproduct = priceppa;
   }
 
@@ -790,9 +800,7 @@ function gettotalprice() {
     .find("li")
     .each(function () {
       var extra = jQuery(this).find(".price_ar").text().replace(/\$/g, "");
-      console.log(extra);
       extraprice = extraprice + parseFloat(extra);
-      console.log(extraprice);
     });
   if (extraprice > 0) {
     extraprice = extraprice * quantity;
@@ -802,7 +810,6 @@ function gettotalprice() {
   if (priceperproduct !== 0 && priceperproduct !== "" && quantity > 0) {
     totalprice = priceperproduct * quantity + extraprice + totalsetup;
   }
-
   if (
     priceperproduct !== 0 &&
     priceperproduct !== "" &&
@@ -848,7 +855,30 @@ function gettotalprice() {
 /****************************** listen to the change in the color input in print logo area ******************************/
 
 jQuery(".allprintareas").on("change", ".printcolors", function () {
-  gettotalprice();
+  var printtype = jQuery(this)
+    .closest(".addlogo_colum")
+    .find(".printtype")
+    .val();
+  var printarea = jQuery(this)
+    .closest(".addlogo_colum")
+    .find(".printarea")
+    .val();
+
+  if (printtype == "" || printarea == "") {
+    if (jQuery(".warning_ar").length <= 0) {
+      jQuery(".sizes_ar").append(
+        "<h6 class='warning_ar'>you can't add more than 3 print areas</h6>"
+      );
+    } else {
+      jQuery(".warning_ar").remove();
+      jQuery(".sizes_ar").append(
+        "<h6 class='warning_ar'>you can't add more than 3 print areas</h6>"
+      );
+    }
+    jQuery(this).val(1);
+  } else {
+    gettotalprice();
+  }
 });
 
 /****************************** listen to click on add to cart button ******************************/
@@ -860,11 +890,9 @@ jQuery("#single_add_to_cart_ar").on("click", function (e) {
     .find("input[type='number']")
     .attr("product-id");
 
-  console.log(productid);
   var alldata = gettotalprice();
   var totalprice = alldata.totalprice;
   var quantity = alldata.quantity;
-  console.log(alldata.extraprice);
   jQuery.ajax({
     type: "POST",
     url: "/wp-admin/admin-ajax.php",
@@ -885,7 +913,6 @@ jQuery("#single_add_to_cart_ar").on("click", function (e) {
       } else {
         alert(response.data.message);
       }
-      console.log(response);
     },
     error: function (xhr, status, error) {
       // Handle error
@@ -901,7 +928,6 @@ function addextrachargesopt() {
   var totalextra = 0;
   var output = '<ul class="listinsideh_ar">';
   jQuery(".addlogo_colum").each(function (index) {
-    console.log(index);
     var pptypes = jQuery(this).find("select.printtype").val();
     var ppareas = jQuery(this).find("select.printarea").val();
     var ppcolors = jQuery(this).find("select.printcolors").val();
@@ -916,7 +942,6 @@ function addextrachargesopt() {
         extra = parseInt(extra) + parseFloat(pppricess);
       }
       output += `<li><span>${pptypes} + ${ppareas} + ${ppcolors}</span><span class='price_ar'>${extra}$</span></li>`;
-      console.log(extra);
     } else {
       if (ppcolors > 3) {
         output += `<li><span>${pptypes} + ${ppareas} + ${ppcolors}</span><span  class='price_ar'>${pppricess}$</span></li>`;
@@ -975,9 +1000,20 @@ function gettheprintareaarray() {
     .find(".addlogo_colum")
     .each(function () {
       var areavalue = jQuery(this).find("select.printarea").val();
+      areavalue = jQuery(this)
+        .find("select.printarea")
+        .find("option[value='" + areavalue + "']")
+        .text();
       var printtype = jQuery(this).find("select.printtype").val();
+      printtype = jQuery(this)
+        .find("select.printtype")
+        .find("option[value='" + printtype + "']")
+        .text();
       var printcolors = jQuery(this).find("select.printcolors").val();
-      var artworkurl = jQuery(this).find("size_name_upload > img").attr("src");
+      var artworkurl = jQuery(this).find(".size_name_upload > img").attr("src");
+      if(artworkurl.includes('Frame-1000005041.svg')){
+        artworkurl='';
+      }
       var newarea = {
         areavalue: areavalue,
         printtype: printtype,

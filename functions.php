@@ -128,6 +128,7 @@ function cart_calculator_shortcode($atts)
 
     $id = $product->get_id();
 
+    $enable = get_field("enable_customization");
     // Output carousel HTML
     // get_price_table_ar('normal_product_prices_based_on_quantity', 'show_me_ar', 'normal price');
     // get_price_table_ar('product_price_based_on_quantity_for_the_leather_patch', 'show_me_ar', 'leather pitch');
@@ -155,7 +156,10 @@ function cart_calculator_shortcode($atts)
     // Output carousel HTML
     //get sizes
     get_sizes_with_quantity();
-    getlogo_print();
+    if ($enable) {
+
+        getlogo_print();
+    }
     // show_add_logo_print();
 
     return ob_get_clean();
@@ -171,9 +175,11 @@ function cart_calculator_table_shortcode($atts)
     global $product;
 
     $id = $product->get_id();
-
+    $enable = get_field("enable_customization");
     // Output carousel HTML
-    get_price_table_ar_all();
+    if ($enable) {
+        get_price_table_ar_all();
+    }
     // show_add_logo_print();
 
     return ob_get_clean();
@@ -276,25 +282,25 @@ function get_price_table_ar_all()
                         <h6><?php echo $title; ?></h6>
                     </div>
                     <div class="price_column_ar" quantity-id="<?php echo explode("_", $arrayskey[1])[2]; ?>">
-                        <div class="range_price_ar">$ <?php echo $price1; ?></div>
+                        <div class="range_price_ar"><?php echo (!empty($price1) ? "$" . $price1 : ""); ?></div>
                     </div>
                     <div class="price_column_ar" quantity-id="<?php echo explode("_", $arrayskey[2])[2]; ?>">
-                        <div class="range_price_ar">$ <?php echo $price12; ?></div>
+                        <div class="range_price_ar"><?php echo (!empty($price12) ? "$" . $price12 : ""); ?></div>
                     </div>
                     <div class="price_column_ar" quantity-id="<?php echo explode("_", $arrayskey[3])[2]; ?>">
-                        <div class="range_price_ar">$ <?php echo $price48; ?></div>
+                        <div class="range_price_ar"><?php echo (!empty($price48) ? "$" . $price48 : ""); ?></div>
                     </div>
                     <div class="price_column_ar" quantity-id="<?php echo explode("_", $arrayskey[4])[2]; ?>">
-                        <div class="range_price_ar">$ <?php echo $price96; ?></div>
+                        <div class="range_price_ar"> <?php echo (!empty($price96) ? "$" . $price96 : ""); ?></div>
                     </div>
                     <div class="price_column_ar" quantity-id="<?php echo explode("_", $arrayskey[5])[2]; ?>">
-                        <div class="range_price_ar">$ <?php echo $price144; ?></div>
+                        <div class="range_price_ar"><?php echo (!empty($price144) ? "$" . $price144 : ""); ?></div>
                     </div>
                     <div class="price_column_ar" quantity-id="<?php echo explode("_", $arrayskey[6])[2]; ?>">
-                        <div class="range_price_ar">$ <?php echo $price288; ?></div>
+                        <div class="range_price_ar"><?php echo (!empty($price288) ? "$" . $price288 : ""); ?></div>
                     </div>
                     <div class="price_column_ar" quantity-id="<?php echo explode("_", $arrayskey[7])[2]; ?>">
-                        <div class="range_price_ar">$ <?php echo $price432; ?></div>
+                        <div class="range_price_ar"><?php echo (!empty($price432) ? "$" . $price432 : ""); ?></div>
                     </div>
                 </div>
 
@@ -641,3 +647,100 @@ function enqueue_admin_custom_css()
     wp_enqueue_style('admin-custom', get_stylesheet_directory_uri() . '/admin/css/style.css', array(), '1.0.0');
 }
 add_action('admin_enqueue_scripts', 'enqueue_admin_custom_css');
+
+
+function add_custom_data_to_order_items($item, $cart_item_key, $values, $order)
+{
+    $product_id = $item->get_product_id();
+
+    // Retrieve session data
+    $custom_price = WC()->session->get('custom_price_' . $product_id);
+    $custom_color = WC()->session->get('custom_color_' . $product_id);
+    $custom_var = WC()->session->get('custom_variates_' . $product_id);
+    $custom_areas = WC()->session->get('custom_areas_' . $product_id);
+
+    // Add session data to order item meta
+    if (!empty($custom_color)) {
+        $item->add_meta_data('_custom_color', $custom_color);
+    }
+    if (!empty($custom_var)) {
+        $item->add_meta_data('_custom_variates', $custom_var);
+    }
+    if (!empty($custom_areas)) {
+        $item->add_meta_data('_custom_areas', $custom_areas);
+    }
+}
+
+add_action('woocommerce_checkout_create_order_line_item', 'add_custom_data_to_order_items', 10, 4);
+
+// order details
+add_filter('woocommerce_defer_transactional_emails', '__return_true');
+
+
+// Display custom data in the order admin
+function display_custom_data_in_order_admin($item_id, $item, $product)
+{
+
+    if ($custom_color = wc_get_order_item_meta($item_id, '_custom_color', true)) {
+        echo '<h6><strong>Color:</strong> ' . esc_html($custom_color) . '</h6>';
+    }
+    if ($custom_variates = wc_get_order_item_meta($item_id, '_custom_variates', true)) {
+        $output = '<div class="sizes_ar"><h6><strong>Sizes:</strong> </h6></div>';
+        if (is_array($custom_variates) > 0) {
+            foreach ($custom_variates as $variates) {
+                $output .= "<h6 class='variations_on_cart_ar'>" . $variates['size'] . " * " . $variates['quantity'] . "</h6>";
+            }
+        }
+        echo $output;
+    }
+    if ($custom_areas = wc_get_order_item_meta($item_id, '_custom_areas', true)) {
+        if (is_array($custom_areas) > 0) {
+            $output = "<div class='size_attr_ar_cart'><h6>Print Areas : </h6>";
+            foreach ($custom_areas as $area) {
+                $printtype = (!empty($area['printtype'])) ? "<span>" . $area['printtype'] . "</span> + " : "";
+                $printarea = (!empty($area['areavalue'])) ? "<span>" . $area['areavalue'] . "</span> + " : "";
+                $printcolor = (!empty($area['printcolors'])) ? "<span>" . $area['printcolors'] . "colors </span>  " : "";
+                $artwork = (!empty($area['artworkurl'])) ? " + <a href='" . $area['artworkurl'] . "' target='_blank'>View Artwork</a></h6>" : "";
+
+                $output .= "<h6>" . $printtype . $printarea . $printcolor . $artwork . "</h6>";
+            }
+            $output .= "</div>";
+            echo $output;
+        }
+    }
+}
+add_action('woocommerce_admin_order_item_values', 'display_custom_data_in_order_admin', 10, 3);
+
+// Display custom data in the customer order view
+function display_custom_data_in_order_view($cart_item, $order_item, $order)
+{
+
+    if ($custom_color = wc_get_order_item_meta($order_item->get_id(), '_custom_color', true)) {
+        echo '<h6><strong>Color:</strong> ' . esc_html($custom_color) . '</h6>';
+    }
+    if ($custom_variates = wc_get_order_item_meta($order_item->get_id(), '_custom_variates', true)) {
+        $output = '<div class="sizes_ar"><h6><strong>Sizes :</strong> </h6></div>';
+        if (is_array($custom_variates) > 0) {
+            foreach ($custom_variates as $variates) {
+                $output .= "<h5 class='variations_on_cart_ar'>" . $variates['size'] . " * " . $variates['quantity'] . "</h5>";
+            }
+        }
+        echo $output;
+    }
+    if ($custom_areas = wc_get_order_item_meta($order_item->get_id(), '_custom_areas', true)) {
+        if (is_array($custom_areas) > 0) {
+            $output = "<div class='size_attr_ar_cart'><h6>Print Areas : </h6>";
+            foreach ($custom_areas as $area) {
+                $printtype = (!empty($area['printtype'])) ? "<span>" . $area['printtype'] . "</span> + " : "";
+                $printarea = (!empty($area['areavalue'])) ? "<span>" . $area['areavalue'] . "</span> + " : "";
+                $printcolor = (!empty($area['printcolors'])) ? "<span>" . $area['printcolors'] . "colors </span>  " : "";
+                $artwork = (!empty($area['artworkurl'])) ? " + <a href='" . $area['artworkurl'] . "' target='_blank'>View Artwork</a></h6>" : "";
+
+                $output .= "<h6>" . $printtype . $printarea . $printcolor . $artwork . "</h6>";
+            }
+            $output .= "</div>";
+            echo $output;
+        }
+    }
+}
+add_action('woocommerce_order_item_meta_end', 'display_custom_data_in_order_view', 10, 3);
